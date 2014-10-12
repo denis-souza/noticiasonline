@@ -1,0 +1,143 @@
+<?php
+
+/**
+ * @file
+ * File with main hooks to interact with the Drupal API.
+ *
+ * @see Coding standards https://www.drupal.org/node/318
+ */
+
+/**
+ * Implents hook_meneu().
+ * @see api https://api.drupal.org/api/drupal/modules!system!system.api.php/function/hook_menu/7
+ * @see accesse argument https://www.drupal.org/node/553368
+ */
+function custom_raffle_menu() {
+	
+	$items['sorteio'] = array(
+    'title' => 'Raflle',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('custom_raffle_form'),
+    'access callback' => TRUE,
+    'menu_name' => 'main-menu',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['admin/config/raffle'] = array(
+    'title' => 'Raffle',
+    'position' => 'right',
+    'weight' => 0,
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('access administration pages'),
+    'access callback' => TRUE,
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
+  );
+
+  $items['admin/config/raffle/list'] = array(
+    'title' => 'List people',
+    'access arguments' => array('administer users'),
+    'description' => 'List all people registered in raffle',
+    'page callback' => 'custom_raffle_table_list',
+    'access callback' => TRUE,
+    'weight' => 1,
+    'file' => 'includes/custom_raffle.functions.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_form().
+ * @see fapi https://api.drupal.org/api/drupal/developer!topics!forms_api_reference.html/7
+ */
+function custom_raffle_form($form, &$form_state) {
+  
+  // Create a text field name.
+  $form['name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Name'),
+    '#size' => 40,
+    '#maxlength' => 40,
+    '#required' => TRUE,
+  );
+
+  // Create a text field email.
+  $form['email'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Email'),
+    '#description' => "Please enter your email.",
+    '#size' => 40,
+    '#maxlength' => 40,
+    '#required' => TRUE,
+	);
+
+  // Create select with options.
+	$form['prize'] = array(
+    '#type' => 'select',
+    '#title' => t('Selected'),
+    '#options' => array(
+      0 => t('Car'),
+      1 => t('House'),
+    ),
+    '#default_value' => 0,
+    '#description' => t('What you want to gain?'),
+  );
+
+	// Create a button submit.
+  $form['submit_button'] = array(
+    '#type' => 'submit',
+    '#value' => t('Send'),
+  );
+
+  return $form;
+}
+
+/**
+ * Implements function form validate.
+ * @see fapi https://api.drupal.org/api/drupal/developer!topics!forms_api_reference.html/7#validate
+ */
+function custom_raffle_form_validate($form, &$form_state) {
+	
+	$values = $form_state['values'];
+
+	// Checked if the field not empty.
+	// And if the value entered is valid email.
+	if (!empty($values['email']) && !valid_email_address($values['email'])) {
+ 	 form_set_error('mail', t('You must enter a valid e-mail "@email" address.', array('@email'=> $values['email'])));
+	}
+}
+
+/**
+ * Implements function form submit.
+ */
+function custom_raffle_form_submit($form, &$form_state) {
+	
+	try{
+
+    // Insert in table raffle.
+    // See https://api.drupal.org/api/drupal/includes!database!database.inc/7
+		db_insert('raffle')
+		->fields(array(
+			'name' => $form_state['values']['name'],
+			'email' => $form_state['values']['email'],
+			'prize' => $form_state['values']['prize'],
+			'date' => date('Y-m-d'),
+		))
+		->execute();
+
+		// After submit show message success.
+		drupal_set_message(t("Ok, email successfully registered!"), 'status');
+	}
+	catch(Exception $e) {
+		
+		// If email email already registered, show message error.
+		if (in_array(1062, $e->errorInfo)) {
+			drupal_set_message(t("Sorry, email already registered!"), 'error');
+		}
+		else {
+			drupal_set_message(t("Sorry, an error occurred try again later"), 'error');
+		}
+	}
+}

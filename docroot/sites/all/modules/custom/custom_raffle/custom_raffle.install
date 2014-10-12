@@ -1,0 +1,94 @@
+<?php
+
+/**
+ * Implementation of hook_schema().
+ * @see doc https://api.drupal.org/api/drupal/modules!system!system.api.php/function/hook_schema/7
+ */
+function custom_raffle_schema() {
+  $schema = array();
+
+  $schema['raffle'] = array(
+    'description' => 'Stores raffle users',
+    'fields' => array(
+      'name' => array(
+        'type' => 'varchar',
+        'not null' => TRUE,
+        'default' => '',
+        'length' => 255,
+        'description' => 'Name of the user',
+      ),
+      'email' => array(
+        'type' => 'varchar',
+        'not null' => TRUE,
+        'default' => '',
+        'length' => 255,
+        'description' => 'Email of the user',
+      ),
+      'prize' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'length' => 255,
+        'description' => 'Email of the user',
+      ),
+    ),
+    'primary key' => array('email'),
+  );
+  
+  return $schema;
+}
+
+/**
+ * Implements hook_update_n().
+ * @see  https://api.drupal.org/api/drupal/modules!system!system.api.php/function/hook_update_N/7
+ */
+function custom_raffle_update_7000() {
+  drupal_install_schema('custom_raffle');
+}
+
+/**
+ * Alter table to insert field date.
+ */
+function custom_raffle_update_7001() {
+  
+  $spec = array(
+    'type' => 'datetime',
+    'mysql_type' => 'datetime',
+    'not null' => TRUE,
+  );
+
+  db_add_field('raffle', 'date', $spec);
+}
+
+/**
+ * Alter table to drop field date.
+ */
+/*function custom_raffle_update_7002() {
+  
+  db_drop_field('raffle', 'date');
+}*/
+
+/**
+ * Drop table raffle.
+ */
+/*function custom_raffle_update_7003() {
+  drupal_install_schema('raffle');
+}*/
+
+/**
+ * Implements hook_install().
+ */
+/*function custom_raffle_install() {
+
+  // Create table.
+  drupal_install_schema('custom_raffle');
+}*/
+
+/**
+ * Implements hook_uninstall().
+ */
+/*function custom_raffle_uninstall() {
+  
+  // Drop table.
+  drupal_uninstall_schema('custom_raffle');
+}*/

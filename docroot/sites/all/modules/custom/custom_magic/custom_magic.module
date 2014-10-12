@@ -1,0 +1,127 @@
+<?php
+
+/**
+ * @file
+ * File with main hooks to interact with the Drupal API.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function custom_magic_menu() {
+  
+  $items = array();
+
+  $items['magic'] = array(
+    'title' => 'Magic Menu',
+    'page callback' => 'custom_magic_simple_page',
+    'access callback' => TRUE,
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+/*  $items['magic/%'] = array(
+    'title' => 'Magic Menu',
+    'page callback' => 'custom_magic_argument_page',
+    'page arguments' => array(1),
+    'access callback' => TRUE,
+    'access arguments' => 'access content',
+    'type' => MENU_NORMAL_ITEM,
+  );*/
+
+  $items['user/%/magic'] = array(
+    'title' => 'Magic Menu',
+    'page callback' => 'custom_magic_tab',
+    'page arguments' => array(1),
+    'access callback' => TRUE,
+    'access arguments' => 'access content',
+    'weight' => -50,
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['magic/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
+  );
+  
+  $items['magic/edit'] = array(
+    'title' => 'Magic edit',
+    'page callback' => 'custom_magic_tab_edit',
+    'page arguments' => array(1),
+    'access callback' => TRUE,
+    'access arguments' => 'access content',
+    'weight' => 1,
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['magic/delete'] = array(
+    'title' => 'Magic delete',
+    'page callback' => 'custom_magic_tab_delete',
+    'page arguments' => array(1),
+    'access callback' => TRUE,
+    'access arguments' => 'access content',
+    'weight' => 1,
+    'type' => MENU_LOCAL_TASK,
+  );
+  
+  $items['node/%node/magic'] = array(
+    'title' => 'Magic node',
+    'page callback' => 'custom_magic_menu_context',
+    'page arguments' => array(1),
+    'access callback' => TRUE,
+    'access arguments' => 'access content',
+    'weight' => 1,
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_LINE,
+  );
+  return $items;
+}
+
+/**
+ * [custom_magic_simple_page description]
+ * @return [type] [description]
+ */
+function custom_magic_simple_page() {
+  return array(
+    '#type' => 'markup',
+    '#markup' => '<p>magic menu</p>',
+  );
+}
+
+function custom_magic_argument_page($arg) {
+  return array(
+    '#type' => 'markup',
+    '#markup' => '<p>' . $arg . '</p>',
+  );
+}
+
+function custom_magic_tab($arg) {
+  return array(
+    '#type' => 'markup',
+    '#markup' => '<p>' . $arg . '</p>',
+  ); 
+}
+
+function custom_magic_tab_edit($arg) {
+  return array(
+    '#type' => 'markup',
+    '#markup' => '<p>' . $arg . '</p>',
+  ); 
+}
+
+function custom_magic_tab_delete($arg) {
+  return array(
+    '#type' => 'markup',
+    '#markup' => '<p>' . $arg . '</p>',
+  ); 
+}
+
+function custom_magic_menu_context($node) {
+  $text = $node->field_description['und'][0]['value'];
+  $output = array(
+    '#type' => 'markup',
+    '#markup' => $text,
+  );
+
+  return $output;
+}

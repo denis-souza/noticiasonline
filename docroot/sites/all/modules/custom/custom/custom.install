@@ -1,0 +1,109 @@
+<?php
+
+/**
+ * Implementation of hook_schema().
+ * @see doc https://api.drupal.org/api/drupal/modules!system!system.api.php/function/hook_schema/7
+ */
+function custom_schema() {
+  $schema = array();
+
+  $schema['custom_table'] = array(
+    'description' => 'Custom table',
+    'fields' => array(
+      'custom_id' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'The id table',
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'not null' => TRUE,
+        'default' => '',
+        'length' => 255,
+        'description' => 'Name of the user',
+      ),
+      'last_name' => array(
+        'type' => 'varchar',
+        'not null' => TRUE,
+        'default' => '',
+        'length' => 255,
+        'description' => 'Last name of the user',
+      ),
+    ),
+    
+    'primary key' => array('custom_id'),
+    
+    'unique keys' => array(
+      'custom_id' => array('custom_id'),
+    ),
+
+    /*'foreign keys' => array(
+      'node_revision' => array(
+        'table' => 'node_revision',
+        'columns' => array('vid' => 'vid'),
+      ),
+    );*/
+  );
+  return $schema;
+}
+
+/**
+ * Implements hook_update_n().
+ * @see  https://api.drupal.org/api/drupal/modules!system!system.api.php/function/hook_update_N/7
+ */
+function custom_update_7000() {
+  
+  // Create table.
+  drupal_install_schema('custom_table');
+}
+
+/**
+ * Implements hook_update_n().
+ */
+function custom_update_7001() {
+  
+  $spec = array(
+    'type' => 'datetime',
+    'mysql_type' => 'datetime',
+    'not null' => TRUE,
+  );
+
+  // Alter table to insert field date.
+  db_add_field('custom_table', 'date', $spec);
+}
+
+/**
+ * Implements hook_update_n().
+ */
+/*function custom_update_7002() {
+  
+  // Alter table to drop field date.
+  db_drop_field('custom_table', 'date');
+}*/
+
+/**
+ * Implements hook_update_n().
+ */
+/*function custom_update_7005() {
+  
+  // Drop table custom.
+  drupal_uninstall_schema('custom_table');
+}*/
+
+/**
+ * Implements hook_enable().
+ */
+function custom_install() {
+
+  // Create table.
+  drupal_install_schema('custom_table');
+}
+
+/**
+ * Implements hook_disable().
+ */
+function custom_uninstall() {
+  
+  // Drop table.
+  drupal_uninstall_schema('custom_table');
+}

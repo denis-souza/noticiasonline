@@ -1,0 +1,5 @@
+name        = Custom Raffle
+description = "Provider configuration raffle"
+core        = 7.x
+package     = Custom
+configure   = admin/config/raffle/list

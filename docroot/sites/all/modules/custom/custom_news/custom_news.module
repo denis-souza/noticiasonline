@@ -1,0 +1,71 @@
+<?php
+
+/**
+ * @file
+ * File with main hooks to interact with the Drupal API.
+ */
+
+/**
+ * @see  https://api.drupal.org/api/drupal/includes!module.inc/function/module_load_include/7
+ */
+module_load_include('inc', 'custom_news', 'includes/custom_news.functions');
+
+/**
+ * Implements hook_block_info().
+ * @see  https://api.drupal.org/api/drupal/modules!block!block.api.php/function/hook_block_info/7
+ */
+function custom_news_block_info() {
+	$blocks['custom_news_highlight'] = array(
+		'info' => t('Block news'),
+		'cache' => DRUPAL_NO_CACHE,
+	);
+
+	return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ * @see  https://api.drupal.org/api/drupal/modules!block!block.api.php/function/hook_block_view/7
+ */
+function custom_news_block_view($delta = '') {
+
+	$block = array();
+
+	switch ($delta) {
+		case 'custom_news_highlight':
+			drupal_add_js(array('custom_news' => array('val' => 'ddd3')), 'setting');
+
+      $news_highlight = custom_news_format_highlight_content();
+			$path = drupal_get_path('module', 'custom_news');
+
+			$block = array(
+      	//'subject' => t('My block title'),
+      	'content' => array(
+        '#markup' => theme('custom_news_highlight', array('news_highlight' => $news_highlight)),
+        '#attached' => array(
+          'js' => array($path . '/js/bjqs-1.3.js', $path . '/js/custom-news.js'),
+          'css' => array($path . '/css/bjqs.css', $path . '/css/custom-news.css'),
+        ),
+      ),
+    );
+		break;
+	}
+
+	return $block;
+}
+
+/**
+ * Implements hook_theme().
+ * @see  https://api.drupal.org/api/drupal/modules!system!system.api.php/function/hook_theme/7
+ */
+function custom_news_theme($existing, $type, $theme, $path) {
+  $path = drupal_get_path('module', 'custom_news') . '/themes';
+
+  return array(
+    'custom_news_highlight' => array(
+      'variables' => array('news_highlight' => NULL),
+      'path' => $path,
+      'template' => 'news-highlight',
+    ),
+  );
+}

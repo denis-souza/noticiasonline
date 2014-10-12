@@ -1,0 +1,307 @@
+<?php
+
+/**
+ * @file
+ * File with main hooks to interact with the Drupal API.
+ */
+
+/**
+ * Implements hook_menu().
+ * 
+ * @see api https://api.drupal.org/api/drupal/modules!system!system.api.php/function/hook_menu/7
+ * 
+ * @see accesse argument https://www.drupal.org/node/553368
+ */
+function custom_menu() {
+	
+	$items['cadastro'] = array(
+		'title' => 'Register',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('custom_form'),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+	);
+
+	return $items;
+}
+
+/**
+ * Implements hook_form().
+ * 
+ * @see fapi https://api.drupal.org/api/drupal/developer!topics!forms_api_reference.html/7
+ */
+function custom_form($form, &$form_state) {
+
+	// see https://api.drupal.org/api/drupal/includes!bootstrap.inc/function/variable_get/7
+	$values = unserialize(variable_get('custom_form_values'));
+	
+	// Explicit hierarchy.
+	$form['#tree'] = TRUE;
+
+	// Create fieldset user information.
+	$form['info_user'] = array(
+  	'#type' => 'fieldset',
+  	'#title' => t('User information'),
+  	'#weight' => 0,
+  	'#collapsible' => TRUE,
+  	'#collapsed' => FALSE,
+	);
+
+	// Create a text field name.
+  $form['info_user']['name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Name'),
+    '#size' => 40,
+    '#maxlength' => 40,
+    '#default_value' => $values['info_user']['name'],
+    '#required' => TRUE,
+  );
+
+  // Create a text field last name.
+  $form['info_user']['last_name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Last name'),
+    '#size' => 40,
+    '#maxlength' => 40,
+    '#default_value' => $values['info_user']['last_name'],
+    '#required' => TRUE,
+	);
+
+	// Create fieldset address information.
+	$form['other_information'] = array(
+  	'#type' => 'fieldset',
+  	'#title' => t('Other information'),
+  	'#collapsible' => TRUE,
+  	'#collapsed' => FALSE,
+	);
+
+  // Create select with options.
+	$form['other_information']['department'] = array(
+    '#type' => 'select',
+    '#title' => t('Department'),
+    '#options' => array(
+      0 => t('Finance'),
+      1 => t('I.T'),
+      2 => t('RH'),
+    ),
+    '#default_value' => $values['other_information']['department'],
+    '#description' => t('Choose your department'),
+  );
+
+  $form['other_information']['level'] = array(
+    '#type' => 'radios',
+    '#title' => t('Level'),
+    '#default_value' => $values['other_information']['level'],
+    '#options' =>  array(
+    	0 => t('JR'),
+    	1 => t('PL'),
+    	2 => t('SR')
+    ),
+  );
+
+  $form['other_information']['days_off'] = array(
+  	'#type' => 'checkboxes',
+  	'#title' => t('Select day off'),
+  	'#default_value' => $values['other_information']['days_off'],
+  	'#options' => drupal_map_assoc(array('monday', 'wednesday', 'friday')),
+	);
+
+	// Create a button submit.
+  $form['submit_button'] = array(
+    '#type' => 'submit',
+    '#value' => t('Send'),
+  );
+
+  // Create a button cancel.
+  $form['cancel'] = array(
+    '#type' => 'button',
+    '#value' => t('Cancel')
+  );
+
+  return $form;
+}
+
+/**
+ * Implements validates function.
+ * 
+ * @see fapi https://api.drupal.org/api/drupal/developer!topics!forms_api_reference.html/7#validate
+ */
+function custom_form_validate($form, &$form_state) {
+
+	$value = $form_state['values'];
+
+	$count = '';
+	foreach ($value['other_information']['days_off'] as $key => $result) {
+	  if (!empty($result)) {
+			$count++; 
+		}
+	}
+
+	// Set message error if the user choose more two days.
+	if ($count > 2) {
+		form_set_error('other_information][day_off', t('You can only choose two days.'));
+		form_set_error('info_user][name', t('You can only choose two days.'));
+	}
+
+	// Redirect form if the user choose cancel form.
+	if ($value['op'] == 'Cancel') {
+		drupal_goto('<front>', array(), 302);
+	}
+}
+
+/**
+ * Implements submit function.
+ */
+function custom_form_submit($form, &$form_state) {
+	
+	$values = serialize($form_state['values']);
+	
+	// see https://api.drupal.org/api/drupal/includes!bootstrap.inc/function/variable_set/7
+	variable_set('custom_form_values', $values);
+	
+	drupal_set_message(t('Your configuration has been saved.'));
+}
+
+/**
+ * Implements hook_form_alter().
+ * 
+ * @see https://api.drupal.org/api/drupal/modules!system!system.api.php/function/hook_form_alter/7
+ */
+function custom_form_alter(&$form, &$form_state, $form_id) {
+
+	if ($form_id == 'page_node_form') {
+		
+		// Add class in form.
+		$form['#attributes']['class'][] = 'my-class';
+		
+		// Add custom validate.
+		$form['#validate'][] = 'custom_page_node_form_validate';
+
+		// Add custom submit.
+		$form['#submit'][] = 'custom_page_node_form_submit';
+	}
+
+	if ($form_id == 'user_login') {
+	  
+	  // Field in form user.
+	  $form['invite_friend'] = array(
+		  '#type' => 'checkbox',
+			'#title' => t('Invite a friend'),
+		);
+
+	  // Create a text field name.
+  	$form['email_friend'] = array(
+	    '#type' => 'textfield',
+	    '#title' => t('E-mail'),
+	    '#size' => 40,
+	    '#maxlength' => 40,
+	    '#required' => TRUE,
+		  '#states' => array(
+        'visible' => array(
+          ':input[name="invite_friend"]' => array('checked' => TRUE),
+        ),
+      )
+    );
+
+  	// Hide field.
+    $form['invite_friend']['#access'] = FALSE;
+	}
+}
+
+/**
+ * Implements custom form validate page node.
+ */
+function custom_page_node_form_validate($form, &$form_state) {
+	
+	$values = $form_state['values'];
+
+	if ($values['title'] == 'test') {
+		form_set_error('title', t('Invalid value'));
+	}
+}
+
+/**
+ * Implements custom form submit page node.
+ */
+function custom_page_node_form_submit($form, &$form_state) {
+	drupal_set_message(t('custom submit'), 'status');
+}
+
+/**
+ * Implements hook_page_build().
+ *
+ * @see  https://api.drupal.org/api/drupal/modules!system!system.api.php/function/hook_page_build/7
+ */
+function custom_page_build(&$page) {
+	
+	$page['content']['#sorted'] = FALSE;
+	
+	// Add element page.
+	$page['content']['custom_links'] = array(
+    '#theme' => 'links',
+    '#links' => array(
+      'drupal_org' => array(
+        'title' => t('Go to Drupal.org'),
+        'external' => TRUE,
+        'href' => "http://drupal.org",
+        'attributes' => array(
+          'target' => '_blank',
+        ),
+      ),
+    ),
+    '#weight' => -99,
+  );
+}
+
+/**
+ * Implements hook_page_alter().
+ *
+ * @see https://api.drupal.org/api/drupal/modules!system!system.api.php/function/hook_page_alter/7
+ */
+function custom_page_alter(&$page) {
+	
+	// Alter element page.
+	$page['footer']['system_powered-by']['#markup'] = t('Alter powered-by footer');
+}
+
+/**
+ * Implements template_preprocess_node().
+ *
+ * @see  https://api.drupal.org/api/drupal/modules!node!node.module/function/template_preprocess_node/7
+ */
+function custom_preprocess_node(&$vars){
+	$node = $vars['node'];
+	if ($node->type == 'news') {
+		$vars['classes_array'][] = drupal_html_class('node NODE');
+	}
+}
+
+/**
+ * Implements template_preprocess_field().
+ *
+ * @see  https://api.drupal.org/api/drupal/modules!field!field.module/function/template_preprocess_field/7
+ */
+function custom_preprocess_field(&$vars) {
+	
+	// Show label field
+	if($vars['element']['#field_name'] == 'field_image') {
+	
+		$vars['label'] = t('My label');
+		$vars['element']['#label_display'] = 'inline';
+		$vars['label_hidden'] = FALSE;
+		//kpr($vars);
+	}
+}
+
+/**
+ * Implements template_preprocess_views_view().
+ * 
+ * @see https://api.drupal.org/api/views/theme!theme.inc/function/template_preprocess_views_view/7
+ */
+function custom_preprocess_views_view(&$vars) {
+	
+	// Specific view.
+	if ($vars['view']->name == 'news') {
+		$vars['classes_array'][] = 'My class';
+	}
+}

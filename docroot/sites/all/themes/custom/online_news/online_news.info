@@ -1,0 +1,31 @@
+
+name = Online News
+description = A custom template from online news.
+package = Core
+core = 7.x
+screenshot = screenshot.png
+
+; ===================================
+; STYLESHEETS
+; ===================================
+
+stylesheets[all][] = css/style.css
+;stylesheets[print][] = css/print.css
+
+; ===================================
+; SCRIPTS
+; ===================================
+
+scripts[] = js/global.js
+
+; ===================================
+; REGIONS
+; ===================================
+
+regions[header] = Header
+regions[highlighted] = Highlighted
+regions[featured] = Featured
+regions[content] = Content
+regions[footer] = Footer
+
+settings[foo_example] = blue bikeshed
